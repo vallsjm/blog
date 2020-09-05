@@ -1,0 +1,40 @@
+prooph_event_store:
+    stores:
+        blog_store:
+            event_store: Prooph\EventStore\Pdo\MySqlEventStore
+            repositories:
+                post_collection:
+                    repository_class: Core\Infrastructure\Repository\EventStorePostCollection
+                    aggregate_type: Core\Domain\Model\Post\Post
+                    aggregate_translator: prooph_event_sourcing.aggregate_translator
+
+                author_collection:
+                    repository_class: Core\Infrastructure\Repository\EventStoreAuthorCollection
+                    aggregate_type: Core\Domain\Model\Author\Author
+                    aggregate_translator: prooph_event_sourcing.aggregate_translator
+    projection_managers:
+        blog_projection_manager:
+            event_store: Prooph\EventStore\Pdo\MySqlEventStore # event store
+            connection: 'doctrine.pdo.connection'
+            projections:
+                author_projection:
+                    read_model: Core\Infrastructure\Projection\Author\AuthorReadModel
+                    projection: Core\Infrastructure\Projection\Author\AuthorProjection
+                post_projection:
+                    read_model: Core\Infrastructure\Projection\Post\PostReadModel
+                    projection: Core\Infrastructure\Projection\Post\PostProjection
+
+
+services:
+    Prooph\EventStore\Pdo\MySqlEventStore:
+        arguments: ['@prooph_event_store.message_factory', '@doctrine.pdo.connection', '@prooph_event_store.single_stream_strategy']
+
+    doctrine.pdo.connection:
+        class: PDO
+        factory: ['@database_connection', getWrappedConnection]
+
+    prooph_event_store.single_stream_strategy:
+        class: Prooph\EventStore\Pdo\PersistenceStrategy\MySqlSingleStreamStrategy
+
+    prooph_event_sourcing.aggregate_translator:
+        class: Prooph\EventSourcing\EventStoreIntegration\AggregateTranslator

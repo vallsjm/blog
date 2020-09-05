@@ -1,0 +1,76 @@
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    Core\Domain\Model\Author\Handler\RegisterAuthorHandler:
+        arguments: ['@author_collection']
+        public: true
+        tags:
+            - { name: 'prooph_service_bus.blog_command_bus.route_target', message_detection: true }
+
+    Core\Domain\Model\Author\Handler\GetAuthorByIdHandler:
+        arguments: ['@core.projection.author_finder']
+        public: true
+        tags:
+            - { name: 'prooph_service_bus.blog_query_bus.route_target', message_detection: true }
+
+    Core\Domain\Model\Post\Handler\CreatePostHandler:
+        arguments: ['@author_collection', '@post_collection']
+        public: true
+        tags:
+            - { name: 'prooph_service_bus.blog_command_bus.route_target', message_detection: true }
+
+    Core\Domain\Model\Post\Handler\GetPostByIdHandler:
+        arguments: ['@core.projection.post_finder']
+        public: true
+        tags:
+            - { name: 'prooph_service_bus.blog_query_bus.route_target', message_detection: true }
+
+    core.service.author_service:
+        class: Core\Application\Service\AuthorService
+        arguments: ['@prooph_service_bus.blog_command_bus', '@prooph_service_bus.blog_query_bus', '@prooph_service_bus.message_factory']
+
+    core.service.post_service:
+        class: Core\Application\Service\PostService
+        arguments: ['@prooph_service_bus.blog_command_bus', '@prooph_service_bus.blog_query_bus', '@prooph_service_bus.message_factory']
+
+    core.projection.author_finder:
+        class: Core\Infrastructure\Projection\Author\AuthorFinder
+        arguments: ['@doctrine.dbal.default_connection']
+
+    core.projection.post_finder:
+        class: Core\Infrastructure\Projection\Post\PostFinder
+        arguments: ['@doctrine.dbal.default_connection']
+
+    Core\Infrastructure\Projection\Author\AuthorProjection: ~
+    Core\Infrastructure\Projection\Author\AuthorReadModel:
+        arguments: ['@doctrine.dbal.default_connection']
+
+    Core\Infrastructure\Projection\Post\PostProjection: ~
+    Core\Infrastructure\Projection\Post\PostReadModel:
+        arguments: ['@doctrine.dbal.default_connection']
+
+    Core\Infrastructure\Command\CreateEventStreamCommand:
+        tags:
+            - { name: 'console.command', command: 'event-store:event-stream:create' }
+
+    Prooph\EventStore\EventStore:
+        alias: 'Prooph\EventStore\Pdo\MySqlEventStore'
+        public: true
+
+    Prooph\EventStore\ReadOnlyEventStore:
+        alias: 'Prooph\EventStore\Pdo\MySqlEventStore'
+        public: true
+
+    Prooph\Common\Messaging\MessageFactory:
+        alias: 'prooph_service_bus.message_factory'
+        public: true
+
+    prooph_event_store_bus_bridge.blog_event_publisher:
+        class: Prooph\EventStoreBusBridge\EventPublisher
+        arguments: ['@prooph_service_bus.blog_event_bus']
+        public: true
+        tags:
+          - { name: 'prooph_event_store.blog_store.plugin' }

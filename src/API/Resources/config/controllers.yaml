@@ -1,0 +1,15 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    # controllers are imported separately to make sure services can be injected
+    # as action arguments even if you don't extend any base controller class
+    API\Controller\AuthorController:
+        arguments: ['@core.service.author_service', '@api.service.formatrequest', '@api.service.formatresponse']
+        tags: ['controller.service_arguments']
+
+    API\Controller\PostController:
+        arguments: ['@core.service.post_service', '@core.service.author_service', '@api.service.formatrequest', '@api.service.formatresponse']
+        tags: ['controller.service_arguments']

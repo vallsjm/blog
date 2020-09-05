@@ -1,0 +1,24 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    api.service.formatrequest:
+        class: API\Service\FormatRequestService
+        arguments: ['@serializer']
+
+    api.service.formatresponse:
+        class: API\Service\FormatResponseService
+        arguments: ['@serializer']
+
+    api.eventlistener.exceptionlistener:
+        class: API\EventListener\ExceptionListener
+        arguments: ['@api.service.formatresponse']
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+
+    api.eventlistener.formatlistener:
+        class: API\EventListener\FormatListener
+        arguments: ['@api.service.formatrequest', '@api.service.formatresponse']
+        tags:
+            - { name: kernel.event_listener, event: kernel.request }

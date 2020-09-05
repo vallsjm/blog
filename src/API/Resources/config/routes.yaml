@@ -1,0 +1,29 @@
+app.swagger_ui:
+    path: /
+    methods: GET
+    defaults: { _controller: nelmio_api_doc.controller.swagger_ui }
+
+app.swagger:
+    path: /doc.json
+    methods: GET
+    defaults: { _controller: nelmio_api_doc.controller.swagger }
+
+api::author-get:
+    path: /api/author/{id}
+    defaults: { _controller: API\Controller\AuthorController:getAuthorByIdAction }
+    methods: GET
+
+api::author-post:
+    path: /api/author
+    defaults: { _controller: API\Controller\AuthorController:postAuthorAction }
+    methods: POST
+
+api::post-get:
+    path: /api/post/{id}
+    defaults: { _controller: API\Controller\PostController:getPostByIdAction }
+    methods: GET
+
+api::post-post:
+    path: /api/post
+    defaults: { _controller: API\Controller\PostController:postPostAction }
+    methods: POST
