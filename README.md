@@ -1,4 +1,4 @@
-API ejemplo DDD + CQRS + EventSourcing
+Ejemplo DDD + CQRS + EventSourcing
 ===================
 
 Instalación del Proyecto
